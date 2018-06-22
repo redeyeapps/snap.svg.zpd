@@ -83,8 +83,13 @@
  * or implied, of Andrea Leofreddi.
  */
 
+/**
+ * NOTE: Michael Wood 22/06/18
+ * - modified to handle devices with both mouse and touch events enabled.
+ */
+
 SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformToElement || function(elem) {
-	return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
+    return elem.getScreenCTM().inverse().multiply(this.getScreenCTM());
 };
 
 
@@ -154,19 +159,20 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
          * Instance an SVGPoint object with given event coordinates.
          */
         var _findPos = function findPos(obj) {
-          var curleft = curtop = 0;
-          var boundingClientRect = obj.getBoundingClientRect();
-          if (boundingClientRect) {
-            curleft = boundingClientRect.left;
-            curtop = boundingClientRect.top;
-          }
-          return [curleft, curtop];
+            var curleft = 0;
+            var curtop = 0;
+            var boundingClientRect = obj.getBoundingClientRect();
+            if (boundingClientRect) {
+                curleft = boundingClientRect.left;
+                curtop = boundingClientRect.top;
+            }
+            return [curleft, curtop];
         };
 
         var _getEventPoint = function getEventPoint(event, svgNode) {
 
             var p = svgNode.node.createSVGPoint(),
-            svgPos = _findPos(svgNode.node);
+                svgPos = _findPos(svgNode.node);
 
             if (typeof event.touches != 'undefined') {
                 p.x = event.touches[0].clientX - svgPos[0];
@@ -175,10 +181,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 p.x = event.clientX - svgPos[0];
                 p.y = event.clientY - svgPos[1];
             }
-            
+
             return p;
         };
-        
+
         /**
          * Detect multi-touch (i.e. pinch)
          */
@@ -188,10 +194,10 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
             if (typeof event.touches != 'undefined' && event.touches.length == 2) {
                 b = true;
             }
-            
+
             return b;
         };
-        
+
         /**
          * Calculate the distance between the 1st and 2nd touches
          */
@@ -229,7 +235,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                 matrix.a = matrix.a.toFixed(4);
                 matrix.d = matrix.d.toFixed(4);
             }
-            
+
             var threshold = zpdElement.options.zoomThreshold;
 
             if (threshold && typeof threshold === 'object') { // array [0.5,2]
@@ -237,11 +243,11 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 if (   (matrix.a < oldMatrix.a && matrix.a < threshold[0])
                     || (matrix.d < oldMatrix.d && matrix.d < threshold[0])) {
-                    
+
                     recalculateMatrix(threshold[0]);
 
                 } else if (   (matrix.a > oldMatrix.a && matrix.a > threshold[1])
-                            || (matrix.d > oldMatrix.d && matrix.d > threshold[1])) {
+                    || (matrix.d > oldMatrix.d && matrix.d > threshold[1])) {
 
                     recalculateMatrix(threshold[1]);
                 }
@@ -439,14 +445,14 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                     // Pan mode
                     var p = _getEventPoint(event, zpdElement.data.svg).matrixTransform(zpdElement.data.stateTf);
-                    
+
                     var trans_x=0;
                     var trans_y=0;
                     if ((zpdElement.options.panDirections == 'both') || (zpdElement.options.panDirections == 'horizontal')) {
-                      var trans_x=p.x - zpdElement.data.stateOrigin.x;
+                        var trans_x=p.x - zpdElement.data.stateOrigin.x;
                     }
                     if ((zpdElement.options.panDirections == 'both') || (zpdElement.options.panDirections == 'vertical')) {
-                      var trans_y=p.y - zpdElement.data.stateOrigin.y;
+                        var trans_y=p.y - zpdElement.data.stateOrigin.y;
                     }
 
                     _setCTM(g, zpdElement.data.stateTf.inverse().translate(trans_x,trans_y));
@@ -459,14 +465,14 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
                     var trans_x=0;
                     var trans_y=0;
                     if ((zpdElement.options.panDirections == 'both') || (zpdElement.options.panDirections == 'horizontal')) {
-                      var trans_x=dragPoint.x - zpdElement.data.stateOrigin.x;
+                        var trans_x=dragPoint.x - zpdElement.data.stateOrigin.x;
                     }
                     if ((zpdElement.options.panDirections == 'both') || (zpdElement.options.panDirections == 'vertical')) {
-                      var trans_y=dragPoint.y - zpdElement.data.stateOrigin.y;
+                        var trans_y=dragPoint.y - zpdElement.data.stateOrigin.y;
                     }
-                    
+
                     _setCTM(zpdElement.data.stateTarget,
-                            zpdElement.data.root.createSVGMatrix()
+                        zpdElement.data.root.createSVGMatrix()
                             .translate(trans_x, trans_y)
                             .multiply(g.getCTM().inverse())
                             .multiply(zpdElement.data.stateTarget.getCTM()));
@@ -500,7 +506,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                 _handleZoomingEvent(event, zpdElement, delta);
             };
-            
+
             var handleTouchMove = function handleTouchMove (event) {
 
                 if (!zpdElement.options.zoom || !zpdElement.options.touch) {
@@ -526,7 +532,7 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
                         // Case for pinch being closed, make the delta negative
                         if (zpdElement.data.prevZoomDistance > distance) delta = delta * -1;
-                        
+
                         _handleZoomingEvent(event, zpdElement, delta);
                     }
 
@@ -557,15 +563,17 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
 
             // mobile
             if ('ontouchend' in document.documentElement) {
-            
+
                 svgElement.addEventListener('touchend', handlerFunctions.mouseOrTouchUp, false);
                 svgElement.addEventListener('touchcancel', handlerFunctions.mouseOrTouchUp, false);
                 svgElement.addEventListener('touchstart', handlerFunctions.mouseOrTouchDown, false);
                 // This event handles both panning and zooming
                 svgElement.addEventListener('touchmove', handlerFunctions.touchMove, false);
 
+            }
+
             // desktop
-            } else if ('onmouseup' in document.documentElement) {
+            if ('onmouseup' in document.documentElement) {
 
                 // IE < 9 would need to use the event onmouseup, but they do not support svg anyway..
                 svgElement.addEventListener('mouseup', handlerFunctions.mouseOrTouchUp, false);
@@ -587,17 +595,17 @@ SVGElement.prototype.getTransformToElement = SVGElement.prototype.getTransformTo
          * remove event handlers
          */
         var _tearDownHandlers = function tearDownHandlers(svgElement, handlerFunctions) {
-        
+
             // mobile
             if ('ontouchend' in document.documentElement) {
-            
+
                 svgElement.removeEventListener('touchend', handlerFunctions.mouseOrTouchUp, false);
                 svgElement.removeEventListener('touchcancel', handlerFunctions.mouseOrTouchUp, false);
                 svgElement.removeEventListener('touchstart', handlerFunctions.mouseOrTouchDown, false);
                 // This event handles both panning and zooming
                 svgElement.removeEventListener('touchmove', handlerFunctions.touchMove, false);
 
-            // desktop
+                // desktop
             } else if ('onmouseup' in document.documentElement) {
 
                 svgElement.removeEventListener('mouseup', handlerFunctions.mouseOrTouchUp, false);
