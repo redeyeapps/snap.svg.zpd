@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/huei90/snap.svg.zpd"
+    "url": "https://github.com/redeyeapps/snap.svg.zpd"
   },
   "keywords": [
     "snapsvg",
@@ -23,7 +23,10 @@
   "author": "Huei Tan",
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/huei90/snap.svg.zpd/issues"
+    "url": "https://github.com/redeyeapps/snap.svg.zpd/issues"
   },
-  "homepage": "https://github.com/huei90/snap.svg.zpd"
+  "homepage": "https://github.com/redeyeapps/snap.svg.zpd",
+  "publishConfig": {
+    "registry": "https://repo.dev.redeye.co/repository/npm-hosted/"
+  }
 }
